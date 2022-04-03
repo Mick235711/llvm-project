@@ -14,6 +14,18 @@ void fn3() { // expected-error {{redefinition}}
 void ov(int) {} // expected-note {{candidate function}}
 void ov(double) = delete; // expected-note {{candidate function has been explicitly deleted}}
 
+void fn_m() = delete("Reason"); // expected-note {{candidate function has been explicitly deleted}}
+
+void fn2_m(); // expected-note {{previous declaration is here}}
+void fn2_m() = delete("Reason"); // expected-error {{deleted definition must be first declaration}}
+
+void fn3_m() = delete("Reason"); // expected-note {{previous definition is here}}
+void fn3_m() { // expected-error {{redefinition}}
+}
+
+void ov_m(int) {} // expected-note {{candidate function}}
+void ov_m(double) = delete("Reason"); // expected-note {{candidate function has been explicitly deleted}}
+
 struct WithDel {
   WithDel() = delete; // expected-note {{'WithDel' has been explicitly marked deleted here}}
   void fn() = delete; // expected-note {{'fn' has been explicitly marked deleted here}}
@@ -27,6 +39,9 @@ void test() {
   fn(); // expected-error {{call to deleted function 'fn'}}
   ov(1);
   ov(1.0); // expected-error {{call to deleted function 'ov'}}
+  fn_m(); // expected-error {{call to deleted function 'fn_m': "Reason"}}
+  ov_m(1);
+  ov_m(1.0); // expected-error {{call to deleted function 'ov_m': "Reason"}}
 
   WithDel dd; // expected-error {{call to deleted constructor of 'WithDel'}}
   WithDel *d = 0;

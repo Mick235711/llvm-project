@@ -17219,7 +17219,7 @@ NamedDecl *Sema::ActOnFriendFunctionDecl(Scope *S, Declarator &D,
   return ND;
 }
 
-void Sema::SetDeclDeleted(Decl *Dcl, SourceLocation DelLoc) {
+void Sema::SetDeclDeleted(Decl *Dcl, SourceLocation DelLoc, Expr *DeleteMessageExpr) {
   AdjustDeclIfTemplate(Dcl);
 
   FunctionDecl *Fn = dyn_cast_or_null<FunctionDecl>(Dcl);
@@ -17260,6 +17260,9 @@ void Sema::SetDeclDeleted(Decl *Dcl, SourceLocation DelLoc) {
     Fn->setInvalidDecl();
   }
 
+  StringLiteral *DeleteMessage =
+    DeleteMessageExpr ? cast<StringLiteral>(DeleteMessageExpr) : nullptr;
+
   // C++11 [basic.start.main]p3:
   //   A program that defines main as deleted [...] is ill-formed.
   if (Fn->isMain())
@@ -17268,7 +17271,7 @@ void Sema::SetDeclDeleted(Decl *Dcl, SourceLocation DelLoc) {
   // C++11 [dcl.fct.def.delete]p4:
   //  A deleted function is implicitly inline.
   Fn->setImplicitlyInline();
-  Fn->setDeletedAsWritten();
+  Fn->setDeletedAsWritten(true, DeleteMessage);
 }
 
 void Sema::SetDeclDefaulted(Decl *Dcl, SourceLocation DefaultLoc) {

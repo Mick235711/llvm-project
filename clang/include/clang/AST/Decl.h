@@ -1906,6 +1906,8 @@ private:
     LazyDeclStmtPtr Body;
     /// Information about a future defaulted function definition.
     DefaultedFunctionInfo *DefaultedInfo;
+    /// Message on deleted function.
+    StringLiteral *DeleteMessage;
   };
 
   unsigned ODRHash;
@@ -2342,7 +2344,10 @@ public:
     return FunctionDeclBits.IsDeleted && !isDefaulted();
   }
 
-  void setDeletedAsWritten(bool D = true) { FunctionDeclBits.IsDeleted = D; }
+  void setDeletedAsWritten(bool D = true, StringLiteral *DeleteMsg = nullptr)
+  { FunctionDeclBits.IsDeleted = D; DeleteMessage = DeleteMsg; }
+
+  StringLiteral *getDeletedMsg() const { return DeleteMessage; }
 
   /// Determines whether this function is "main", which is the
   /// entry point into an executable program.

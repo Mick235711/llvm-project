@@ -2882,7 +2882,7 @@ public:
   StmtResult ActOnCXXForRangeIdentifier(Scope *S, SourceLocation IdentLoc,
                                         IdentifierInfo *Ident,
                                         ParsedAttributes &Attrs);
-  void SetDeclDeleted(Decl *dcl, SourceLocation DelLoc);
+  void SetDeclDeleted(Decl *dcl, SourceLocation DelLoc, Expr *DeleteMessageExpr = nullptr);
   void SetDeclDefaulted(Decl *dcl, SourceLocation DefaultLoc);
   void CheckStaticLocalForDllExport(VarDecl *VD);
   void FinalizeDeclaration(Decl *D);

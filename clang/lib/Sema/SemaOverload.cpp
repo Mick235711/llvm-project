@@ -13203,15 +13203,28 @@ static ExprResult FinishOverloadedCallExpr(Sema &SemaRef, Scope *S, Expr *Fn,
     break;
 
   case OR_Deleted: {
-    CandidateSet->NoteCandidates(
-        PartialDiagnosticAt(Fn->getBeginLoc(),
-                            SemaRef.PDiag(diag::err_ovl_deleted_call)
-                                << ULE->getName() << Fn->getSourceRange()),
-        SemaRef, OCD_AllCandidates, Args);
+    FunctionDecl *FDecl = (*Best)->Function;
+    StringLiteral *DeleteMessage = FDecl->getDeletedMsg();
+    if (DeleteMessage) {
+      SmallString<256> MsgBuffer;
+      llvm::raw_svector_ostream Msg(MsgBuffer);
+      DeleteMessage->printPretty(Msg, nullptr, SemaRef.getPrintingPolicy());
+      CandidateSet->NoteCandidates(
+          PartialDiagnosticAt(Fn->getBeginLoc(),
+                              SemaRef.PDiag(diag::err_ovl_deleted_call_msg)
+                                  << ULE->getName() << DeleteMessage << Fn->getSourceRange()),
+          SemaRef, OCD_AllCandidates, Args);
+    }
+    else {
+      CandidateSet->NoteCandidates(
+          PartialDiagnosticAt(Fn->getBeginLoc(),
+                              SemaRef.PDiag(diag::err_ovl_deleted_call)
+                                  << ULE->getName() << Fn->getSourceRange()),
+          SemaRef, OCD_AllCandidates, Args);
+    }
 
     // We emitted an error for the unavailable/deleted function call but keep
     // the call in the AST.
-    FunctionDecl *FDecl = (*Best)->Function;
     Fn = SemaRef.FixOverloadedFunctionReference(Fn, (*Best)->FoundDecl, FDecl);
     return SemaRef.BuildResolvedCallExpr(Fn, FDecl, LParenLoc, Args, RParenLoc,
                                          ExecConfig, /*IsExecConfig=*/false,

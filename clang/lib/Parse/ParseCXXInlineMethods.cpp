@@ -68,7 +68,28 @@ NamedDecl *Parser::ParseCXXInlineMethodDef(
                       ? diag::warn_cxx98_compat_defaulted_deleted_function
                       : diag::ext_defaulted_deleted_function)
         << 1 /* deleted */;
-      Actions.SetDeclDeleted(FnD, KWLoc);
+
+      ExprResult DeleteMessage;
+      if (Tok.is(tok::l_paren)) {
+        BalancedDelimiterTracker T(*this, tok::l_paren);
+        if (T.consumeOpen()) {
+          Diag(Tok, diag::err_expected) << tok::l_paren;
+          SkipUntil(tok::semi);
+        }
+        else if (!isTokenStringLiteral()) {
+          Diag(Tok, diag::err_expected_string_literal)
+            << /*Source='deleted_msg'*/4;
+          SkipUntil(tok::r_paren, StopAtSemi);
+        }
+        else {
+          DeleteMessage = ParseStringLiteralExpression();
+          if (DeleteMessage.isInvalid()) {
+            SkipUntil(tok::r_paren, StopAtSemi);
+          }
+          T.consumeClose();
+        }
+      }
+      Actions.SetDeclDeleted(FnD, KWLoc, DeleteMessage.get());
       Delete = true;
       if (auto *DeclAsFunction = dyn_cast<FunctionDecl>(FnD)) {
         DeclAsFunction->setRangeEnd(KWEndLoc);

@@ -1339,7 +1339,28 @@ Decl *Parser::ParseFunctionDefinition(ParsingDeclarator &D,
                       ? diag::warn_cxx98_compat_defaulted_deleted_function
                       : diag::ext_defaulted_deleted_function)
         << 1 /* deleted */;
-      Actions.SetDeclDeleted(Res, KWLoc);
+
+      ExprResult DeleteMessage;
+      if (Tok.is(tok::l_paren)) {
+        BalancedDelimiterTracker T(*this, tok::l_paren);
+        if (T.consumeOpen()) {
+          Diag(Tok, diag::err_expected) << tok::l_paren;
+          SkipUntil(tok::semi);
+        }
+        else if (!isTokenStringLiteral()) {
+          Diag(Tok, diag::err_expected_string_literal)
+            << /*Source='deleted_msg'*/4;
+          SkipUntil(tok::r_paren, StopAtSemi);
+        }
+        else {
+          DeleteMessage = ParseStringLiteralExpression();
+          if (DeleteMessage.isInvalid()) {
+            SkipUntil(tok::r_paren, StopAtSemi);
+          }
+          T.consumeClose();
+        }
+      }
+      Actions.SetDeclDeleted(Res, KWLoc, DeleteMessage.get());
       Delete = true;
     } else if (TryConsumeToken(tok::kw_default, KWLoc)) {
       Diag(KWLoc, getLangOpts().CPlusPlus11

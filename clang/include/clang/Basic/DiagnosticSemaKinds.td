@@ -4412,6 +4412,7 @@ def err_ovl_no_viable_member_function_in_call : Error<
 def err_ovl_ambiguous_call : Error<
   "call to %0 is ambiguous">;
 def err_ovl_deleted_call : Error<"call to deleted function %0">;
+def err_ovl_deleted_call_msg : Error<"call to deleted function %0: %1">;
 def err_ovl_ambiguous_member_call : Error<
   "call to member function %0 is ambiguous">;
 def err_ovl_deleted_member_call : Error<
