@@ -2128,7 +2128,7 @@ void TextNodeDumper::VisitFunctionDecl(const FunctionDecl *D) {
   if (D->isTrivial())
     OS << " trivial";
 
-  if (const StringLiteral *M = D->getDeletedMessage())
+  if (const Expr *M = D->getDeletedMessage())
     AddChild("delete message", [=] { Visit(M); });
 
   if (D->isIneligibleOrNotSelected())

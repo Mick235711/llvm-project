@@ -746,7 +746,7 @@ void ASTDeclWriter::VisitFunctionDecl(FunctionDecl *D) {
     if (auto *FDI = D->getDefalutedOrDeletedInfo()) {
       // Store both that there is an DefaultedOrDeletedInfo and whether it
       // contains a DeletedMessage.
-      StringLiteral *DeletedMessage = FDI->getDeletedMessage();
+      Expr *DeletedMessage = FDI->getDeletedMessage();
       Record.push_back(1 | (DeletedMessage ? 2 : 0));
       if (DeletedMessage)
         Record.AddStmt(DeletedMessage);

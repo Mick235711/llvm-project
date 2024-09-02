@@ -1104,8 +1104,8 @@ void ASTDeclReader::VisitFunctionDecl(FunctionDecl *FD) {
     // a DeletedMessage for the DefaultedOrDeletedInfo.
     if (auto Info = Record.readInt()) {
       bool HasMessage = Info & 2;
-      StringLiteral *DeletedMessage =
-          HasMessage ? cast<StringLiteral>(Record.readExpr()) : nullptr;
+      Expr *DeletedMessage =
+          HasMessage ? Record.readExpr() : nullptr;
 
       unsigned NumLookups = Record.readInt();
       SmallVector<DeclAccessPair, 8> Lookups;

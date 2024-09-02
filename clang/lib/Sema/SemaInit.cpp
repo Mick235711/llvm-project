@@ -8807,10 +8807,18 @@ bool InitializationSequence::Diagnose(Sema &S,
       OverloadingResult Ovl
         = FailedCandidateSet.BestViableFunction(S, Kind.getLocation(), Best);
 
-      StringLiteral *Msg = Best->Function->getDeletedMessage();
+      Expr *Msg = Best->Function->getDeletedMessage();
+      bool HasMessage = (Msg != nullptr);
+      std::string Str;
+      if (HasMessage) {
+        HasMessage =
+            S.EvaluateStaticAssertMessageAsString(
+                Msg, Str, S.Context, /*ErrorOnInvalidMessage=*/true) ||
+            !Str.empty();
+      }
       S.Diag(Kind.getLocation(), diag::err_typecheck_deleted_function)
           << OnlyArg->getType() << DestType.getNonReferenceType()
-          << (Msg != nullptr) << (Msg ? Msg->getString() : StringRef())
+          << HasMessage << (HasMessage ? Str : StringRef())
           << Args[0]->getSourceRange();
       if (Ovl == OR_Deleted) {
         S.NoteDeletedFunction(Best->Function);
@@ -9071,10 +9079,18 @@ bool InitializationSequence::Diagnose(Sema &S,
                      S.getSpecialMember(cast<CXXMethodDecl>(Best->Function)))
               << DestType << ArgsRange;
         else {
-          StringLiteral *Msg = Best->Function->getDeletedMessage();
+          Expr *Msg = Best->Function->getDeletedMessage();
+          bool HasMessage = (Msg != nullptr);
+          std::string Str;
+          if (HasMessage) {
+            HasMessage =
+                S.EvaluateStaticAssertMessageAsString(
+                    Msg, Str, S.Context, /*ErrorOnInvalidMessage=*/true) ||
+                !Str.empty();
+          }
           S.Diag(Kind.getLocation(), diag::err_ovl_deleted_init)
-              << DestType << (Msg != nullptr)
-              << (Msg ? Msg->getString() : StringRef()) << ArgsRange;
+              << DestType << HasMessage
+              << (HasMessage ? Str : StringRef()) << ArgsRange;
         }
 
         S.NoteDeletedFunction(Best->Function);

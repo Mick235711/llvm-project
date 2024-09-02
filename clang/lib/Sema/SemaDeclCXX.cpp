@@ -17956,7 +17956,7 @@ NamedDecl *Sema::ActOnFriendFunctionDecl(Scope *S, Declarator &D,
 }
 
 void Sema::SetDeclDeleted(Decl *Dcl, SourceLocation DelLoc,
-                          StringLiteral *Message) {
+                          Expr *Message) {
   AdjustDeclIfTemplate(Dcl);
 
   FunctionDecl *Fn = dyn_cast_or_null<FunctionDecl>(Dcl);
@@ -18119,7 +18119,7 @@ void Sema::DiagnoseReturnInConstructorExceptionHandler(CXXTryStmt *TryBlock) {
 }
 
 void Sema::SetFunctionBodyKind(Decl *D, SourceLocation Loc, FnBodyKind BodyKind,
-                               StringLiteral *DeletedMessage) {
+                               Expr *DeletedMessage) {
   switch (BodyKind) {
   case FnBodyKind::Delete:
     SetDeclDeleted(D, Loc, DeletedMessage);

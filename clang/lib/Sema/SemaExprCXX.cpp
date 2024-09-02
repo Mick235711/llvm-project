@@ -3329,9 +3329,17 @@ bool Sema::FindDeallocationFunction(SourceLocation StartLoc, CXXRecordDecl *RD,
     // FIXME: DiagnoseUseOfDecl?
     if (Operator->isDeleted()) {
       if (Diagnose) {
-        StringLiteral *Msg = Operator->getDeletedMessage();
+        Expr *Msg = Operator->getDeletedMessage();
+        bool HasMessage = (Msg != nullptr);
+        std::string Str;
+        if (HasMessage) {
+          HasMessage =
+              EvaluateStaticAssertMessageAsString(
+                  Msg, Str, Context, /*ErrorOnInvalidMessage=*/true) ||
+              !Str.empty();
+        }
         Diag(StartLoc, diag::err_deleted_function_use)
-            << (Msg != nullptr) << (Msg ? Msg->getString() : StringRef());
+            << HasMessage << (HasMessage ? Str : StringRef());
         NoteDeletedFunction(Operator);
       }
       return true;

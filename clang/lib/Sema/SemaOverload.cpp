@@ -14408,12 +14408,20 @@ Sema::CreateOverloadedUnaryOp(SourceLocation OpLoc, UnaryOperatorKind Opc,
     // is passed further and it eventually ends up compared to number of
     // function candidate parameters which never includes the object parameter,
     // so slice ArgsArray to make sure apples are compared to apples.
-    StringLiteral *Msg = Best->Function->getDeletedMessage();
+    Expr *Msg = Best->Function->getDeletedMessage();
+    bool HasMessage = (Msg != nullptr);
+    std::string Str;
+    if (HasMessage) {
+      HasMessage =
+          EvaluateStaticAssertMessageAsString(
+              Msg, Str, Context, /*ErrorOnInvalidMessage=*/true) ||
+          !Str.empty();
+    }
     CandidateSet.NoteCandidates(
         PartialDiagnosticAt(OpLoc, PDiag(diag::err_ovl_deleted_oper)
                                        << UnaryOperator::getOpcodeStr(Opc)
-                                       << (Msg != nullptr)
-                                       << (Msg ? Msg->getString() : StringRef())
+                                       << HasMessage
+                                       << (HasMessage ? Str : StringRef())
                                        << Input->getSourceRange()),
         *this, OCD_AllCandidates, ArgsArray.drop_front(),
         UnaryOperator::getOpcodeStr(Opc), OpLoc);
@@ -14936,14 +14944,22 @@ ExprResult Sema::CreateOverloadedBinOp(SourceLocation OpLoc,
         return ExprError();
       }
 
-      StringLiteral *Msg = Best->Function->getDeletedMessage();
+      Expr *Msg = Best->Function->getDeletedMessage();
+      bool HasMessage = (Msg != nullptr);
+      std::string Str;
+      if (HasMessage) {
+        HasMessage =
+            EvaluateStaticAssertMessageAsString(
+                Msg, Str, Context, /*ErrorOnInvalidMessage=*/true) ||
+            !Str.empty();
+      }
       CandidateSet.NoteCandidates(
           PartialDiagnosticAt(
               OpLoc,
               PDiag(diag::err_ovl_deleted_oper)
                   << getOperatorSpelling(Best->Function->getDeclName()
                                              .getCXXOverloadedOperator())
-                  << (Msg != nullptr) << (Msg ? Msg->getString() : StringRef())
+                  << HasMessage << (HasMessage ? Str : StringRef())
                   << Args[0]->getSourceRange() << Args[1]->getSourceRange()),
           *this, OCD_AllCandidates, Args, BinaryOperator::getOpcodeStr(Opc),
           OpLoc);
@@ -15263,12 +15279,20 @@ ExprResult Sema::CreateOverloadedArraySubscriptExpr(SourceLocation LLoc,
       return ExprError();
 
     case OR_Deleted: {
-      StringLiteral *Msg = Best->Function->getDeletedMessage();
+      Expr *Msg = Best->Function->getDeletedMessage();
+      bool HasMessage = (Msg != nullptr);
+      std::string Str;
+      if (HasMessage) {
+        HasMessage =
+            EvaluateStaticAssertMessageAsString(
+                Msg, Str, Context, /*ErrorOnInvalidMessage=*/true) ||
+            !Str.empty();
+      }
       CandidateSet.NoteCandidates(
           PartialDiagnosticAt(LLoc,
                               PDiag(diag::err_ovl_deleted_oper)
-                                  << "[]" << (Msg != nullptr)
-                                  << (Msg ? Msg->getString() : StringRef())
+                                  << "[]" << HasMessage
+                                  << (HasMessage ? Str : StringRef())
                                   << Args[0]->getSourceRange() << Range),
           *this, OCD_AllCandidates, Args, "[]", LLoc);
       return ExprError();
@@ -15748,12 +15772,20 @@ Sema::BuildCallToObjectOfClassType(Scope *S, Expr *Obj,
     // FIXME: Is this diagnostic here really necessary? It seems that
     //   1. we don't have any tests for this diagnostic, and
     //   2. we already issue err_deleted_function_use for this later on anyway.
-    StringLiteral *Msg = Best->Function->getDeletedMessage();
+    Expr *Msg = Best->Function->getDeletedMessage();
+    bool HasMessage = (Msg != nullptr);
+    std::string Str;
+    if (HasMessage) {
+      HasMessage =
+          EvaluateStaticAssertMessageAsString(
+              Msg, Str, Context, /*ErrorOnInvalidMessage=*/true) ||
+          !Str.empty();
+    }
     CandidateSet.NoteCandidates(
         PartialDiagnosticAt(Object.get()->getBeginLoc(),
                             PDiag(diag::err_ovl_deleted_object_call)
-                                << Object.get()->getType() << (Msg != nullptr)
-                                << (Msg ? Msg->getString() : StringRef())
+                                << Object.get()->getType() << HasMessage
+                                << (HasMessage ? Str : StringRef())
                                 << Object.get()->getSourceRange()),
         *this, OCD_AllCandidates, Args);
     break;
@@ -15953,11 +15985,19 @@ Sema::BuildOverloadedArrowExpr(Scope *S, Expr *Base, SourceLocation OpLoc,
     return ExprError();
 
   case OR_Deleted: {
-    StringLiteral *Msg = Best->Function->getDeletedMessage();
+    Expr *Msg = Best->Function->getDeletedMessage();
+    bool HasMessage = (Msg != nullptr);
+    std::string Str;
+    if (HasMessage) {
+      HasMessage =
+          EvaluateStaticAssertMessageAsString(
+              Msg, Str, Context, /*ErrorOnInvalidMessage=*/true) ||
+          !Str.empty();
+    }
     CandidateSet.NoteCandidates(
         PartialDiagnosticAt(OpLoc, PDiag(diag::err_ovl_deleted_oper)
-                                       << "->" << (Msg != nullptr)
-                                       << (Msg ? Msg->getString() : StringRef())
+                                       << "->" << HasMessage
+                                       << (HasMessage ? Str : StringRef())
                                        << Base->getSourceRange()),
         *this, OCD_AllCandidates, Base);
     return ExprError();
@@ -16370,11 +16410,19 @@ void Sema::DiagnoseUseOfDeletedFunction(SourceLocation Loc, SourceRange Range,
                                         OverloadCandidateSet &CandidateSet,
                                         FunctionDecl *Fn, MultiExprArg Args,
                                         bool IsMember) {
-  StringLiteral *Msg = Fn->getDeletedMessage();
+  Expr *Msg = Fn->getDeletedMessage();
+  bool HasMessage = (Msg != nullptr);
+  std::string Str;
+  if (HasMessage) {
+    HasMessage =
+        EvaluateStaticAssertMessageAsString(
+            Msg, Str, Context, /*ErrorOnInvalidMessage=*/true) ||
+        !Str.empty();
+  }
   CandidateSet.NoteCandidates(
       PartialDiagnosticAt(Loc, PDiag(diag::err_ovl_deleted_call)
-                                   << IsMember << Name << (Msg != nullptr)
-                                   << (Msg ? Msg->getString() : StringRef())
+                                   << IsMember << Name << HasMessage
+                                   << (HasMessage ? Str : StringRef())
                                    << Range),
       *this, OCD_AllCandidates, Args);
 }

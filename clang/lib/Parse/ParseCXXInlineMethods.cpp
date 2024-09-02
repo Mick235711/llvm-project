@@ -21,10 +21,10 @@
 using namespace clang;
 
 /// Parse the optional ("message") part of a deleted-function-body.
-StringLiteral *Parser::ParseCXXDeletedFunctionMessage() {
+Expr *Parser::ParseCXXDeletedFunctionMessage() {
   if (!Tok.is(tok::l_paren))
     return nullptr;
-  StringLiteral *Message = nullptr;
+  Expr *Message = nullptr;
   BalancedDelimiterTracker BT{*this, tok::l_paren};
   BT.consumeOpen();
 
@@ -32,6 +32,17 @@ StringLiteral *Parser::ParseCXXDeletedFunctionMessage() {
     ExprResult Res = ParseUnevaluatedStringLiteralExpression();
     if (Res.isUsable()) {
       Message = Res.getAs<StringLiteral>();
+      Diag(Message->getBeginLoc(), getLangOpts().CPlusPlus26
+                                       ? diag::warn_cxx23_delete_with_message
+                                       : diag::ext_delete_with_message)
+          << Message->getSourceRange();
+    }
+  } else if (getLangOpts().CPlusPlus26) {
+    EnterExpressionEvaluationContext ConstantEvaluated(
+        Actions, Sema::ExpressionEvaluationContext::ConstantEvaluated);
+    ExprResult Res = ParseConstantExpressionInExprEvalContext();
+    if (Res.isUsable()) {
+      Message = Res.getAs<Expr>();
       Diag(Message->getBeginLoc(), getLangOpts().CPlusPlus26
                                        ? diag::warn_cxx23_delete_with_message
                                        : diag::ext_delete_with_message)
@@ -113,7 +124,7 @@ NamedDecl *Parser::ParseCXXInlineMethodDef(
                       ? diag::warn_cxx98_compat_defaulted_deleted_function
                       : diag::ext_defaulted_deleted_function)
         << 1 /* deleted */;
-      StringLiteral *Message = ParseCXXDeletedFunctionMessage();
+      Expr *Message = ParseCXXDeletedFunctionMessage();
       Actions.SetDeclDeleted(FnD, KWLoc, Message);
       Delete = true;
       if (auto *DeclAsFunction = dyn_cast<FunctionDecl>(FnD)) {

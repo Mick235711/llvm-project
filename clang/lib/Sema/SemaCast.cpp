@@ -500,12 +500,20 @@ static bool tryDiagnoseOverloadedCast(Sema &S, CastType CT,
         candidates.BestViableFunction(S, range.getBegin(), Best);
     assert(Res == OR_Deleted && "Inconsistent overload resolution");
 
-    StringLiteral *Msg = Best->Function->getDeletedMessage();
+    Expr *Msg = Best->Function->getDeletedMessage();
+    bool HasMessage = (Msg != nullptr);
+    std::string Str;
+    if (HasMessage) {
+      HasMessage =
+          S.EvaluateStaticAssertMessageAsString(
+              Msg, Str, S.Context, /*ErrorOnInvalidMessage=*/true) ||
+          !Str.empty();
+    }
     candidates.NoteCandidates(
         PartialDiagnosticAt(range.getBegin(),
                             S.PDiag(diag::err_ovl_deleted_conversion_in_cast)
-                                << CT << srcType << destType << (Msg != nullptr)
-                                << (Msg ? Msg->getString() : StringRef())
+                                << CT << srcType << destType << HasMessage
+                                << (HasMessage ? Str : StringRef())
                                 << range << src->getSourceRange()),
         S, OCD_ViableCandidates, src);
     return true;

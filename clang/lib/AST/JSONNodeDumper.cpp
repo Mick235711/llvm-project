@@ -978,7 +978,7 @@ void JSONNodeDumper::VisitFunctionDecl(const FunctionDecl *FD) {
     JOS.attribute("explicitlyDefaulted",
                   FD->isDeleted() ? "deleted" : "default");
 
-  if (StringLiteral *Msg = FD->getDeletedMessage())
+  if (StringLiteral *Msg = dyn_cast<StringLiteral>(FD->getDeletedMessage()))
     JOS.attribute("deletedMessage", Msg->getString());
 }
 

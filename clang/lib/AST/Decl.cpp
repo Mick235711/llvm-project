@@ -3091,11 +3091,11 @@ bool FunctionDecl::isVariadic() const {
 FunctionDecl::DefaultedOrDeletedFunctionInfo *
 FunctionDecl::DefaultedOrDeletedFunctionInfo::Create(
     ASTContext &Context, ArrayRef<DeclAccessPair> Lookups,
-    StringLiteral *DeletedMessage) {
+    Expr *DeletedMessage) {
   static constexpr size_t Alignment =
       std::max({alignof(DefaultedOrDeletedFunctionInfo),
-                alignof(DeclAccessPair), alignof(StringLiteral *)});
-  size_t Size = totalSizeToAlloc<DeclAccessPair, StringLiteral *>(
+                alignof(DeclAccessPair), alignof(Expr *)});
+  size_t Size = totalSizeToAlloc<DeclAccessPair, Expr *>(
       Lookups.size(), DeletedMessage != nullptr);
 
   DefaultedOrDeletedFunctionInfo *Info =
@@ -3106,7 +3106,7 @@ FunctionDecl::DefaultedOrDeletedFunctionInfo::Create(
   std::uninitialized_copy(Lookups.begin(), Lookups.end(),
                           Info->getTrailingObjects<DeclAccessPair>());
   if (DeletedMessage)
-    *Info->getTrailingObjects<StringLiteral *>() = DeletedMessage;
+    *Info->getTrailingObjects<Expr *>() = DeletedMessage;
   return Info;
 }
 
@@ -3119,7 +3119,7 @@ void FunctionDecl::setDefaultedOrDeletedInfo(
   DefaultedOrDeletedInfo = Info;
 }
 
-void FunctionDecl::setDeletedAsWritten(bool D, StringLiteral *Message) {
+void FunctionDecl::setDeletedAsWritten(bool D, Expr *Message) {
   FunctionDeclBits.IsDeleted = D;
 
   if (Message) {
@@ -3133,14 +3133,14 @@ void FunctionDecl::setDeletedAsWritten(bool D, StringLiteral *Message) {
 }
 
 void FunctionDecl::DefaultedOrDeletedFunctionInfo::setDeletedMessage(
-    StringLiteral *Message) {
+    Expr *Message) {
   // We should never get here with the DefaultedOrDeletedInfo populated, but
   // no space allocated for the deleted message, since that would require
   // recreating this, but setDefaultedOrDeletedInfo() disallows overwriting
   // an already existing DefaultedOrDeletedFunctionInfo.
   assert(HasDeletedMessage &&
          "No space to store a delete message in this DefaultedOrDeletedInfo");
-  *getTrailingObjects<StringLiteral *>() = Message;
+  *getTrailingObjects<Expr *>() = Message;
 }
 
 FunctionDecl::DefaultedOrDeletedFunctionInfo *

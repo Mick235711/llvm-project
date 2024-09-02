@@ -265,9 +265,17 @@ bool Sema::DiagnoseUseOfDecl(NamedDecl *D, ArrayRef<SourceLocation> Locs,
             << Ctor->getParent()
             << Ctor->getInheritedConstructor().getConstructor()->getParent();
       else {
-        StringLiteral *Msg = FD->getDeletedMessage();
+        Expr *Msg = FD->getDeletedMessage();
+        bool HasMessage = (Msg != nullptr);
+        std::string Str;
+        if (HasMessage) {
+          HasMessage =
+              EvaluateStaticAssertMessageAsString(
+                  Msg, Str, Context, /*ErrorOnInvalidMessage=*/true) ||
+              !Str.empty();
+        }
         Diag(Loc, diag::err_deleted_function_use)
-            << (Msg != nullptr) << (Msg ? Msg->getString() : StringRef());
+            << HasMessage << (HasMessage ? Str : StringRef());
       }
       NoteDeletedFunction(FD);
       return true;

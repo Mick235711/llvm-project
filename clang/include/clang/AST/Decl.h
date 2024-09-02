@@ -1957,7 +1957,7 @@ public:
   /// Stashed information about a defaulted/deleted function body.
   class DefaultedOrDeletedFunctionInfo final
       : llvm::TrailingObjects<DefaultedOrDeletedFunctionInfo, DeclAccessPair,
-                              StringLiteral *> {
+                              Expr *> {
     friend TrailingObjects;
     unsigned NumLookups;
     bool HasDeletedMessage;
@@ -1969,7 +1969,7 @@ public:
   public:
     static DefaultedOrDeletedFunctionInfo *
     Create(ASTContext &Context, ArrayRef<DeclAccessPair> Lookups,
-           StringLiteral *DeletedMessage = nullptr);
+           Expr *DeletedMessage = nullptr);
 
     /// Get the unqualified lookup results that should be used in this
     /// defaulted function definition.
@@ -1977,12 +1977,12 @@ public:
       return {getTrailingObjects<DeclAccessPair>(), NumLookups};
     }
 
-    StringLiteral *getDeletedMessage() const {
-      return HasDeletedMessage ? *getTrailingObjects<StringLiteral *>()
+    Expr *getDeletedMessage() const {
+      return HasDeletedMessage ? *getTrailingObjects<Expr *>()
                                : nullptr;
     }
 
-    void setDeletedMessage(StringLiteral *Message);
+    void setDeletedMessage(Expr *Message);
   };
 
 private:
@@ -2470,7 +2470,7 @@ public:
     return FunctionDeclBits.IsDeleted && !isDefaulted();
   }
 
-  void setDeletedAsWritten(bool D = true, StringLiteral *Message = nullptr);
+  void setDeletedAsWritten(bool D = true, Expr *Message = nullptr);
 
   /// Determines whether this function is "main", which is the
   /// entry point into an executable program.
@@ -2627,7 +2627,7 @@ public:
   }
 
   /// Get the message that indicates why this function was deleted.
-  StringLiteral *getDeletedMessage() const {
+  Expr *getDeletedMessage() const {
     return FunctionDeclBits.HasDefaultedOrDeletedInfo
                ? DefaultedOrDeletedInfo->getDeletedMessage()
                : nullptr;

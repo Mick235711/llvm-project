@@ -1401,7 +1401,7 @@ Decl *Parser::ParseFunctionDefinition(ParsingDeclarator &D,
 
   // Parse function body eagerly if it is either '= delete;' or '= default;' as
   // ActOnStartOfFunctionDef needs to know whether the function is deleted.
-  StringLiteral *DeletedMessage = nullptr;
+  Expr *DeletedMessage = nullptr;
   Sema::FnBodyKind BodyKind = Sema::FnBodyKind::Other;
   SourceLocation KWLoc;
   if (TryConsumeToken(tok::equal)) {

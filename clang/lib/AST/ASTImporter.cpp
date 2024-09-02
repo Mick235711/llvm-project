@@ -4037,7 +4037,7 @@ ExpectedDecl ASTNodeImporter::VisitFunctionDecl(FunctionDecl *D) {
     // decl and its redeclarations may be required.
   }
 
-  StringLiteral *Msg = D->getDeletedMessage();
+  Expr *Msg = D->getDeletedMessage();
   if (Msg) {
     auto Imported = import(Msg);
     if (!Imported)
