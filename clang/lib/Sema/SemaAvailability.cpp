@@ -148,9 +148,11 @@ ShouldDiagnoseAvailabilityOfDecl(Sema &S, const NamedDecl *D,
   bool HasMessage = (Msg != nullptr);
   if (HasMessage) {
     std::string Str;
+    // FIXME: Why does the unevaluated string assert fire when AllowEvaluatedString is false?
     HasMessage =
         S.EvaluateStaticAssertMessageAsString(
-            Msg, Str, S.Context, /*ErrorOnInvalidMessage=*/true) ||
+            Msg, Str, S.Context,
+            /*ErrorOnInvalidMessage=*/true, /*AllowEvaluatedString=*/true) ||
         !Str.empty();
     if (HasMessage) *Message = Str;
   }

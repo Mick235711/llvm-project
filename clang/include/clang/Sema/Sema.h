@@ -5542,7 +5542,8 @@ public:
 
   bool EvaluateStaticAssertMessageAsString(Expr *Message, std::string &Result,
                                            ASTContext &Ctx,
-                                           bool ErrorOnInvalidMessage);
+                                           bool ErrorOnInvalidMessage,
+                                           bool AllowEvaluatedString = false);
   Decl *ActOnStaticAssertDeclaration(SourceLocation StaticAssertLoc,
                                      Expr *AssertExpr, Expr *AssertMessageExpr,
                                      SourceLocation RParenLoc);

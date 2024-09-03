@@ -212,9 +212,11 @@ static bool DiagnoseNoDiscard(Sema &S, const WarnUnusedResultAttr *A,
   bool HasMessage = (Msg != nullptr);
   std::string Str;
   if (HasMessage) {
+    // FIXME: Why does the unevaluated string assert fire when AllowEvaluatedString is false?
     HasMessage =
         S.EvaluateStaticAssertMessageAsString(
-            Msg, Str, S.Context, /*ErrorOnInvalidMessage=*/true) ||
+            Msg, Str, S.Context,
+            /*ErrorOnInvalidMessage=*/true, /*AllowEvaluatedString=*/true) ||
         !Str.empty();
   }
 

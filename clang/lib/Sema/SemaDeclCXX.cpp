@@ -17166,13 +17166,14 @@ void Sema::DiagnoseStaticAssertDetails(const Expr *E) {
 bool Sema::EvaluateStaticAssertMessageAsString(Expr *Message,
                                                std::string &Result,
                                                ASTContext &Ctx,
-                                               bool ErrorOnInvalidMessage) {
+                                               bool ErrorOnInvalidMessage,
+                                               bool AllowEvaluatedString) {
   assert(Message);
   assert(!Message->isTypeDependent() && !Message->isValueDependent() &&
          "can't evaluate a dependant static assert message");
 
   if (const auto *SL = dyn_cast<StringLiteral>(Message)) {
-    assert(SL->isUnevaluated() && "expected an unevaluated string");
+    if (!AllowEvaluatedString) assert(SL->isUnevaluated() && "expected an unevaluated string");
     Result.assign(SL->getString().begin(), SL->getString().end());
     return true;
   }
