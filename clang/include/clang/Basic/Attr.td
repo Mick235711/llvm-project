@@ -1590,7 +1590,7 @@ def Deprecated : InheritableAttr {
   let Spellings = [GCC<"deprecated">, Declspec<"deprecated">,
                    CXX11<"","deprecated", 201309>,
                    C23<"", "deprecated", 201904>];
-  let Args = [StringArgument<"Message", 1>,
+  let Args = [ExprArgument<"Message", 1>,
               // An optional string argument that enables us to provide a
               // Fix-It.
               StringArgument<"Replacement", 1>];

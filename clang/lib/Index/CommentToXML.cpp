@@ -1009,13 +1009,14 @@ void CommentASTToXMLConverter::visitFullComment(const FullComment *C) {
       const AvailabilityAttr *AA = dyn_cast<AvailabilityAttr>(Attrs[i]);
       if (!AA) {
         if (const DeprecatedAttr *DA = dyn_cast<DeprecatedAttr>(Attrs[i])) {
-          if (DA->getMessage().empty())
+          // FIXME: No access to StringLiteral or Sema here, so how to get message?
+          // if (DA->getMessage().empty())
             Result << "<Deprecated/>";
-          else {
-            Result << "<Deprecated>";
-            appendToResultWithXMLEscaping(DA->getMessage());
-            Result << "</Deprecated>";
-          }
+          // else {
+          //   Result << "<Deprecated>";
+          //   appendToResultWithXMLEscaping(DA->getMessage());
+          //   Result << "</Deprecated>";
+          // }
         }
         else if (const UnavailableAttr *UA = dyn_cast<UnavailableAttr>(Attrs[i])) {
           if (UA->getMessage().empty())

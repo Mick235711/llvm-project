@@ -92,7 +92,8 @@ static std::pair<AvailabilityResult, const NamedDecl *>
 ShouldDiagnoseAvailabilityOfDecl(Sema &S, const NamedDecl *D,
                                  std::string *Message,
                                  ObjCInterfaceDecl *ClassReceiver) {
-  AvailabilityResult Result = D->getAvailability(Message);
+  Expr* Msg = nullptr;
+  AvailabilityResult Result = D->getAvailability(Message, VersionTuple(), nullptr, &Msg);
 
   // For typedefs, if the typedef declaration appears available look
   // to the underlying type to see if it is more restrictive.
@@ -110,14 +111,14 @@ ShouldDiagnoseAvailabilityOfDecl(Sema &S, const NamedDecl *D,
   // For alias templates, get the underlying declaration.
   if (const auto *ADecl = dyn_cast<TypeAliasTemplateDecl>(D)) {
     D = ADecl->getTemplatedDecl();
-    Result = D->getAvailability(Message);
+    Result = D->getAvailability(Message, VersionTuple(), nullptr, &Msg);
   }
 
   // Forward class declarations get their attributes from their definition.
   if (const auto *IDecl = dyn_cast<ObjCInterfaceDecl>(D)) {
     if (IDecl->getDefinition()) {
       D = IDecl->getDefinition();
-      Result = D->getAvailability(Message);
+      Result = D->getAvailability(Message, VersionTuple(), nullptr, &Msg);
     }
   }
 
@@ -142,6 +143,16 @@ ShouldDiagnoseAvailabilityOfDecl(Sema &S, const NamedDecl *D,
         D = Init;
       }
     }
+  }
+
+  bool HasMessage = (Msg != nullptr);
+  if (HasMessage) {
+    std::string Str;
+    HasMessage =
+        S.EvaluateStaticAssertMessageAsString(
+            Msg, Str, S.Context, /*ErrorOnInvalidMessage=*/true) ||
+        !Str.empty();
+    if (HasMessage) *Message = Str;
   }
 
   return {Result, D};

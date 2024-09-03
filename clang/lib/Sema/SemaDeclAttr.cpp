@@ -5758,10 +5758,10 @@ static void handleDeprecatedAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
   }
 
   // Handle the cases where the attribute has a text message.
-  StringRef Str, Replacement;
-  if (AL.isArgExpr(0) && AL.getArgAsExpr(0) &&
-      !S.checkStringLiteralArgumentAttr(AL, 0, Str))
-    return;
+  StringRef Replacement;
+  // if (AL.isArgExpr(0) && AL.getArgAsExpr(0) &&
+  //     !S.checkStringLiteralArgumentAttr(AL, 0, Str))
+  //   return;
 
   // Support a single optional message only for Declspec and [[]] spellings.
   if (AL.isDeclspecAttribute() || AL.isStandardAttributeSyntax())
@@ -5773,7 +5773,8 @@ static void handleDeprecatedAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
   if (!S.getLangOpts().CPlusPlus14 && AL.isCXX11Attribute() && !AL.isGNUScope())
     S.Diag(AL.getLoc(), diag::ext_cxx14_attr) << AL;
 
-  D->addAttr(::new (S.Context) DeprecatedAttr(S.Context, AL, Str, Replacement));
+  D->addAttr(::new (S.Context) DeprecatedAttr(S.Context, AL,
+             AL.isArgExpr(0) ? AL.getArgAsExpr(0) : nullptr, Replacement));
 }
 
 static bool isGlobalVar(const Decl *D) {

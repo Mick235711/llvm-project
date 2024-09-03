@@ -738,7 +738,8 @@ public:
   AvailabilityResult
   getAvailability(std::string *Message = nullptr,
                   VersionTuple EnclosingVersion = VersionTuple(),
-                  StringRef *RealizedPlatform = nullptr) const;
+                  StringRef *RealizedPlatform = nullptr,
+                  Expr **MessageExpr = nullptr) const;
 
   /// Retrieve the version of the target platform in which this
   /// declaration was introduced.

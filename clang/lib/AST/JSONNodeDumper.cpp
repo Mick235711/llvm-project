@@ -576,8 +576,9 @@ void JSONNodeDumper::VisitCleanupAttr(const CleanupAttr *CA) {
 }
 
 void JSONNodeDumper::VisitDeprecatedAttr(const DeprecatedAttr *DA) {
-  if (!DA->getMessage().empty())
-    JOS.attribute("message", DA->getMessage());
+  if (const StringLiteral* Literal = dyn_cast<StringLiteral>(DA->getMessage()))
+    if (!Literal->getString().empty())
+      JOS.attribute("message", Literal->getString());
   if (!DA->getReplacement().empty())
     JOS.attribute("replacement", DA->getReplacement());
 }

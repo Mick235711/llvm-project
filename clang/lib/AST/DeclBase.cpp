@@ -747,21 +747,23 @@ static AvailabilityResult CheckAvailability(ASTContext &Context,
 
 AvailabilityResult Decl::getAvailability(std::string *Message,
                                          VersionTuple EnclosingVersion,
-                                         StringRef *RealizedPlatform) const {
+                                         StringRef *RealizedPlatform,
+                                         Expr **MessageExpr) const {
   if (auto *FTD = dyn_cast<FunctionTemplateDecl>(this))
     return FTD->getTemplatedDecl()->getAvailability(Message, EnclosingVersion,
                                                     RealizedPlatform);
 
   AvailabilityResult Result = AR_Available;
   std::string ResultMessage;
+  Expr *ResultExpr = MessageExpr ? *MessageExpr : nullptr;
 
   for (const auto *A : attrs()) {
     if (const auto *Deprecated = dyn_cast<DeprecatedAttr>(A)) {
       if (Result >= AR_Deprecated)
         continue;
 
-      if (Message)
-        ResultMessage = std::string(Deprecated->getMessage());
+      if (MessageExpr)
+        ResultExpr = Deprecated->getMessage();
 
       Result = AR_Deprecated;
       continue;
@@ -787,6 +789,7 @@ AvailabilityResult Decl::getAvailability(std::string *Message,
         Result = AR;
         if (Message)
           ResultMessage.swap(*Message);
+        ResultExpr = nullptr;
       }
       continue;
     }
@@ -794,6 +797,8 @@ AvailabilityResult Decl::getAvailability(std::string *Message,
 
   if (Message)
     Message->swap(ResultMessage);
+  if (MessageExpr)
+    std::swap(*MessageExpr, ResultExpr);
   return Result;
 }
 
