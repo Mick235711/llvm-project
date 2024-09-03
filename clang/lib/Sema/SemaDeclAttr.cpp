@@ -2720,7 +2720,7 @@ static void handleWarnUnusedResult(Sema &S, Decl *D, const ParsedAttr &AL) {
       return;
     }
 
-  StringRef Str;
+  // StringRef Str;
   if (AL.isStandardAttributeSyntax() && !AL.getScopeName()) {
     // The standard attribute cannot be applied to variable declarations such
     // as a function pointer.
@@ -2743,8 +2743,8 @@ static void handleWarnUnusedResult(Sema &S, Decl *D, const ParsedAttr &AL) {
       // literal. If in C++ mode, but not in C++20 mode, diagnose as an
       // extension.
       // FIXME: C23 should support this feature as well, even as an extension.
-      if (!S.checkStringLiteralArgumentAttr(AL, 0, Str, nullptr))
-        return;
+      // if (!S.checkStringLiteralArgumentAttr(AL, 0, Str, nullptr))
+      //   return;
     } else if (LO.CPlusPlus && !LO.CPlusPlus17)
       S.Diag(AL.getLoc(), diag::ext_cxx17_attr) << AL;
   }
@@ -2757,7 +2757,8 @@ static void handleWarnUnusedResult(Sema &S, Decl *D, const ParsedAttr &AL) {
     return;
   }
 
-  D->addAttr(::new (S.Context) WarnUnusedResultAttr(S.Context, AL, Str));
+  D->addAttr(::new (S.Context) WarnUnusedResultAttr(S.Context, AL,
+             AL.getNumArgs() == 1 ? AL.getArgAsExpr(0) : nullptr));
 }
 
 static void handleWeakImportAttr(Sema &S, Decl *D, const ParsedAttr &AL) {

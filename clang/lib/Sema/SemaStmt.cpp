@@ -208,18 +208,26 @@ static bool DiagnoseNoDiscard(Sema &S, const WarnUnusedResultAttr *A,
                               SourceRange R2, bool IsCtor) {
   if (!A)
     return false;
-  StringRef Msg = A->getMessage();
+  Expr *Msg = A->getMessage();
+  bool HasMessage = (Msg != nullptr);
+  std::string Str;
+  if (HasMessage) {
+    HasMessage =
+        S.EvaluateStaticAssertMessageAsString(
+            Msg, Str, S.Context, /*ErrorOnInvalidMessage=*/true) ||
+        !Str.empty();
+  }
 
-  if (Msg.empty()) {
+  if (!HasMessage) {
     if (IsCtor)
       return S.Diag(Loc, diag::warn_unused_constructor) << A << R1 << R2;
     return S.Diag(Loc, diag::warn_unused_result) << A << R1 << R2;
   }
 
   if (IsCtor)
-    return S.Diag(Loc, diag::warn_unused_constructor_msg) << A << Msg << R1
+    return S.Diag(Loc, diag::warn_unused_constructor_msg) << A << Str << R1
                                                           << R2;
-  return S.Diag(Loc, diag::warn_unused_result_msg) << A << Msg << R1 << R2;
+  return S.Diag(Loc, diag::warn_unused_result_msg) << A << Str << R1 << R2;
 }
 
 void Sema::DiagnoseUnusedExprResult(const Stmt *S, unsigned DiagID) {

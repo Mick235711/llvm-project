@@ -3462,7 +3462,7 @@ def WarnUnusedResult : InheritableAttr {
                    CXX11<"clang", "warn_unused_result">,
                    GCC<"warn_unused_result">];
   let Subjects = SubjectList<[ObjCMethod, Enum, Record, FunctionLike, TypedefName]>;
-  let Args = [StringArgument<"Message", 1>];
+  let Args = [ExprArgument<"Message", 1>];
   let Documentation = [WarnUnusedResultsDocs];
   let AdditionalMembers = [{
     // Check whether this the C++11 nodiscard version, even in non C++11
